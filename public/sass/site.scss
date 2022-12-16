@@ -1,0 +1,200 @@
+$magenta: #dc127a !important;
+
+#app {
+  height: 570px;
+
+  @media (max-width: 768px) {
+    height: 100%;
+
+    .trigger-card + .trigger-card {
+      border-top: 1px solid #f5f5f5;
+    }
+  }
+
+  .button.is-primary {
+    transition: .1s opacity linear;
+
+    &.is-outlined {
+      background-color: transparent;
+      color: $magenta;
+      border-color: $magenta;
+
+      &:hover {
+        background-color: $magenta;
+        color: white;
+      }
+    }
+
+    &:not(.is-outlined) {
+      background-color: $magenta;
+
+      &:hover {
+        background-color: $magenta;
+        opacity: .8;
+      }
+    }
+  }
+
+  .magenta-text {
+    color: $magenta;
+  }
+
+  .h-100 {
+    height: 100%;
+  }
+
+  .overflow-scroll {
+    overflow-y: auto;
+  }
+
+  .checkbox,
+  .radio {
+    margin-left: 0;
+
+    &:not(:last-child) {
+      margin-right: .8em;
+    }
+  }
+
+  input {
+    &[type="checkbox"],
+    &[type="radio"] {
+      margin-right: .3em
+    }
+
+    &[type="search"] {
+      box-sizing: border-box;
+    }
+  }
+
+  .opt-out-link:hover {
+    color: $magenta;
+
+  }
+
+  .trigger-card {
+    p {
+      line-height: 1.5em;
+    }
+
+    &:hover {
+      cursor: pointer;
+
+      .trigger-description {
+        color: initial !important;
+      }
+    }
+  }
+
+  /////////////////////////////////////////////
+  // LOADERS
+
+
+  .app-loader-container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-loader, .app-loader:before, .app-loader:after {
+    border-radius: 50%;
+    width: 2.5em;
+    height: 2.5em;
+    animation-fill-mode: both;
+    animation: bblFadInOut 1.8s infinite ease-in-out;
+  }
+
+  .app-loader {
+    color: lightgray;
+    font-size: 7px;
+    position: relative;
+    text-indent: -9999em;
+    transform: translateZ(0);
+    animation-delay: -0.16s;
+  }
+
+  .app-loader:before,
+  .app-loader:after {
+    content: '';
+    position: absolute;
+    top: 0;
+  }
+
+  .app-loader:before {
+    left: -3.5em;
+    animation-delay: -0.32s;
+  }
+
+  .app-loader:after {
+    left: 3.5em;
+  }
+
+  @keyframes bblFadInOut {
+    0%, 80%, 100% {
+      box-shadow: 0 2.5em 0 -1.3em
+    }
+    40% {
+      box-shadow: 0 2.5em 0 0
+    }
+  }
+
+  //////////////////////////////////////////////////////
+
+  .trigger-loader {
+    //width: 360px;
+    width: 100%;
+    height: 45px;
+    display: block;
+    position: relative;
+    background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5) 50%, transparent 80%), linear-gradient(#EEEEEEFF 56px, transparent 0), linear-gradient(#EEEEEEFF 24px, transparent 0);
+    background-repeat: no-repeat;
+    background-size: 75px 100px, 27% 17px, 88% 17px;
+    background-position: 0 0, 0 0, 120px 25px;
+    box-sizing: border-box;
+    animation: trigger-loader 1s linear infinite;
+
+    &-1 {
+      @extend .trigger-loader;
+      background-size: 75px 100px, 35% 17px, 100% 17px;
+    }
+
+    &-2 {
+      @extend .trigger-loader;
+      background-size: 75px 100px, 30% 17px, 77% 17px;
+    }
+  }
+
+
+  @keyframes trigger-loader {
+    0% {
+      background-position: 0 0, 0 0, 0 25px;
+    }
+    100% {
+      background-position: 100% 0, 0 0, 0 25px;
+    }
+  }
+
+  //////////////////////////////////////////////////////////
+  .redirecting:after {
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: bottom;
+    -webkit-animation: ellipsis steps(4,end) 3000ms infinite;
+    animation: ellipsis steps(4,end) 3000ms infinite;
+    content: "\2026"; /* ascii code for the ellipsis character */
+    width: 0;
+  }
+
+  @keyframes ellipsis {
+    to {
+      width: 1em;
+    }
+  }
+
+  @-webkit-keyframes ellipsis {
+    to {
+      width: 1em;
+    }
+  }
+}
