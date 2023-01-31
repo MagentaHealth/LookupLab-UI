@@ -38,27 +38,53 @@
      ^{:key (str (:audience trigger) (:description trigger))}
      [trigger-card trigger])])
 
-(defn trigger-group [triggers audience]
-  (when-let [triggers (not-empty (get triggers audience))]
-    [:<>
-     [:div.content.mb-0
-      [:h5.mt-5.mb-2 audience]
-      [:hr.mt-0.mb-0]]
-     [trigger-list triggers]]))
+(defn trigger-group [triggers audience show-counts?]
+  (when (or (= "All" audience)
+            (contains? @(rf/subscribe [:search/audience]) audience))
+    (when-let [triggers (not-empty (get triggers audience))]
+      [:<>
+       [:div.content.mb-0
+        [:h5.mt-5.mb-2
+         audience
+         (when show-counts?
+           (str " (" (count triggers) " result" (if (> (count triggers) 1) "s") ")"))]
+        [:hr.mt-0.mb-0]]
+       [trigger-list triggers]])))
 
-(defn audience-radio [label value]
-  [:label.radio
-   [:input {:type      "radio"
-            :name      "audience"
-            :checked   (= value @(rf/subscribe [:search/audience]))
-            :on-change #(rf/dispatch [:set-audience value])}]
-   label])
+(defn trigger-panel [triggers show-counts?]
+  [:<>
+   [trigger-group triggers "Current Patients" show-counts?]
+   [trigger-group triggers "Non Patients" show-counts?]
+   [trigger-group triggers "Third Parties" show-counts?]
+   [trigger-group triggers "All" show-counts?]])
+
+
+;; ------
+
+(defn audience-checkbox [label value]
+  (let [checked?  (contains? @(rf/subscribe [:search/audience]) value)
+        disabled? (or (and (not-empty @(rf/subscribe [:search/query]))
+                           (not (nil? @(rf/subscribe [:search/results])))
+                           (not (contains? @(rf/subscribe [:search/results]) value)))
+                      (and
+                        (not-empty @(rf/subscribe [:search/query]))
+                        @(rf/subscribe [:search/no-results?])))]
+    [:label.radio.is-size-6
+     {:class (if disabled? "has-text-grey-light")}
+     [:input {:type      "checkbox"
+              :name      "audience"
+              :checked   checked?
+              :disabled  disabled?
+              :on-change #(if checked?
+                            (rf/dispatch [:unset-audience value])
+                            (rf/dispatch [:set-audience value]))}]
+     label]))
 
 (defn audience-selector [options]
   [:<>
    (for [[label audience] options]
      ^{:key label}
-     [audience-radio label audience])])
+     [audience-checkbox label audience])])
 
 ;; -------------------------
 ;; Views
@@ -84,17 +110,30 @@
 
 (defn no-results []
   [:div.content
-   [:p.subtitle "Sorry, this tool didn't find any good results for you."]
-   [:p [:strong "Please try to rephrase your request,"] " being more generic if possible."]
-   [:hr]
+   [:p.subtitle "No Results :("]
+   [:p [:strong "Please try using only keywords,"] " or click the option below that describes you best"]
 
-   [:p "If that doesn't help, try the following options:"]
-   [:p "If you have a " [:strong "medical concern"] " and you want some guidance, "
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/medical-concern-directions"}])} "click here"] "."]
+   [:h5.mt-5.mb-2 "Current Patients"]
+   [:hr.mt-0.mb-0]
+   [:p "If you have a " [:strong "medical concern"] ", "
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/medical-concern-directions"}])} "click here for guidance"] "."]
    [:p "If you need help with an " [:strong "administrative question"] ", "
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/resources"}])} "click here"] "."]
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/resources"}])} "click here to see our FAQ and Contact Information"] "."]
 
-   [:hr]
+   [:h5.mt-5.mb-2 "Non Patients"]
+   [:hr.mt-0.mb-0]
+   [:p
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/patientpreregistration"}])}
+     "More information about registration / seeing a physician at Magenta Health is available here"]
+     "."]
+
+   [:h5.mt-5.mb-2 "Third Parties"]
+   [:hr.mt-0.mb-0]
+   [:p
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/information-for-physicians-and-healthcare-facilities"}])}
+     "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]
+
+   [:hr.mb-2]
    [:p.mb-1 "Lastly, you can skip this tool and"]
    [:a.button.is-primary.is-fullwidth
     {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
@@ -124,16 +163,8 @@
       [:p.subtitle "We're testing a new search tool."]
       [:h2.title.is-size-4 "How can we help you today?"]]
 
-     [:div.field
-      [:label.label.mb-1 "I am a..."]
-      [:div.control
-       [audience-selector
-        [["Current patient" "Current Patients"]
-         ["Non patient" "Non Patients"]
-         ["Third party" "Third Parties"]]]]]
-
      [:div.field.mb-1
-      [:label.label.mb-1.mt-3 "And I want..."]
+      [:label.label.mb-1.mt-3 "I want..."]
       [:div.control
        [:input.input
         {:type        "search"
@@ -143,9 +174,15 @@
          :on-key-up   #(if (= 13 (.-which %))
                          (.blur (.-target %)))}]]]
 
+     [:div.field.mb-2
+      [audience-selector
+       [["Current patients" "Current Patients"]
+        ["Non patients" "Non Patients"]
+        ["Third parties" "Third Parties"]]]]
+
      [:a.has-text-grey-light.opt-out-link.is-size-7
       {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
-      "I would prefer to browse the website "
+      "Click here if you would prefer to browse the website "
       [:span.icon-text {:style {:vertical-align :initial}}
        "manually"
        [:span.icon
@@ -168,24 +205,19 @@
 
          results
          [:<>
+          [trigger-panel results true]
           [:div.content.mb-0
-           [:p.mb-1 "If these results aren't helpful, just"]
+           [:hr.mt-4.mb-3]
+           [:p.mb-2 "If these results aren't helpful, just"]
            [:a.button.is-primary.is-fullwidth
             {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
             [:span
              "Proceed to our Main Website"]
             [:span.icon
-             [:i.fa.fa-arrow-right]]]
-           [:h5.mt-5.mb-2 (str (count results) " result" (when (> (count results) 1) "s"))]
-           [:hr.mt-0.mb-0]]
-          [trigger-list results]]
+             [:i.fa.fa-arrow-right]]]]]
 
          defaults
-         [:div
-          [trigger-group defaults "All"]
-          [trigger-group defaults "Current Patients"]
-          [trigger-group defaults "Non Patients"]
-          [trigger-group defaults "Third Parties"]]))
+         [trigger-panel defaults]))
 
      #_[:button.button.is-primary.is-pulled-right
         {:on-click #(rf/dispatch [:set-view :browse])}

@@ -16,8 +16,7 @@
   :init-db
   (fn [_ _]
     {:db {:view   :search
-          :search {:filters  #{"Current Patients" "Non Patients" "Third Parties"}
-                   :audience "Current Patients"}}}))
+          :search {:audience  #{"Current Patients" "Non Patients" "Third Parties"}}}}))
 
 ;; -------------------------
 ;; Views
@@ -99,12 +98,11 @@
   :http/search-triggers
   (fn [{:keys [db]} [resource-id]]
     (when-let [query (not-empty (get-in db [:search :query]))]
-      (let [audience (get-in db [:search :audience])]
-        {:http {:method      ajax/GET
-                :url         "/api/search"
-                :resource-id resource-id
-                :params      {:query query :audience audience}
-                :on-success  [:set-results]}}))))
+      {:http {:method      ajax/GET
+              :url         "/api/search"
+              :resource-id resource-id
+              :params      {:query query}
+              :on-success  [:set-results]}})))
 
 (def debounced-search
   (goog.functions.debounce #(rf/dispatch [:http/search-triggers]) 500))
@@ -136,10 +134,12 @@
 (rf/reg-event-fx
   :set-audience
   (fn [{:keys [db]} [_ audience]]
-    (merge
-      {:db (assoc-in db [:search :audience] audience)}
-      (when (not-empty (get-in db [:search :query]))
-        {:dispatch [:http/search-triggers]}))))
+    {:db (update-in db [:search :audience] conj audience)}))
+
+(rf/reg-event-fx
+  :unset-audience
+  (fn [{:keys [db]} [_ audience]]
+    {:db (update-in db [:search :audience] disj audience)}))
 
 ;; -------------------------
 ;; Click through & popups
@@ -154,9 +154,8 @@
   (fn [db _]
     (dissoc db :trigger-message)))
 
-(defn log-click-and-navigate [query audience trigger]
+(defn log-click-and-navigate [query trigger]
   (let [payload (->> {:query    query
-                      :audience audience
                       :trigger  trigger}
                      (clj->js)
                      (.stringify js/JSON))]
@@ -169,17 +168,16 @@
   (rf/dispatch [:trigger/clear-message])
   (set! (. js/location -href) (:destination trigger)))
 
-(defn delay-click-through [query audience trigger]
+(defn delay-click-through [query trigger]
   (js/setTimeout
-    #(log-click-and-navigate query audience trigger)
+    #(log-click-and-navigate query trigger)
     5000))
 
 (rf/reg-event-fx
   :select-trigger
   (fn [{:keys [db]} [_ trigger]]
-    (let [query    (str (get-in db [:search :query]))
-          audience (str (get-in db [:search :audience]))]
+    (let [query    (str (get-in db [:search :query]))]
       (if-let [message (not-empty (:message trigger))]
         {:db          (assoc db :trigger-message message)
-         :side-effect #(delay-click-through query audience trigger)}
-        {:side-effect #(log-click-and-navigate query audience trigger)}))))
+         :side-effect #(delay-click-through query trigger)}
+        {:side-effect #(log-click-and-navigate query trigger)}))))
