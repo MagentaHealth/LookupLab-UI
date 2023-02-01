@@ -9,6 +9,15 @@
 
 
 ;; -------------------------
+;; Helpers
+
+(defn sentence-case [s]
+  (apply str (s/upper-case (first s)) (rest s)))
+
+(defn trigger-count [triggers]
+  (str " (" (count triggers) " result" (if (> (count triggers) 1) "s") ")"))
+
+;; -------------------------
 ;; Components
 
 (defn trigger-loader []
@@ -28,7 +37,7 @@
     [:span (:prefix trigger) "..."]
     [:br]
     [:span.trigger-description.magenta-text.has-text-weight-bold
-     (s/upper-case (first (:description trigger))) (rest (:description trigger))]]
+     (sentence-case (:description trigger))]]
    [:span.icon.my-auto.is-hidden-tablet.has-text-grey-lighter
     [:i.fa.fa-chevron-right]]])
 
@@ -143,16 +152,26 @@
      [:i.fa.fa-arrow-right]]]])
 
 (defn popup-message []
-  (if-let [message (not-empty @(rf/subscribe [:trigger/message]))]
+  (if-let [trigger (not-empty @(rf/subscribe [:selected-trigger]))]
     [:div.modal.is-active
      {:style {:z-index 9999}}
      [:div.modal-background]
      [:div.modal-content
-      [:div.box
-       [:div.content.has-text-centered
-        [:p {:dangerouslySetInnerHTML
-             {:__html message}}]
-        [:p.redirecting [:i "Redirecting you momentarily"]]]]]]))
+      [:article.message
+       [:div.message-header
+        [:p (apply str (s/upper-case (first (:description trigger))) (rest (:description trigger)))]
+        [:button.delete
+         {:aria-label "delete"
+          :on-click   #(rf/dispatch [:clear-trigger])}]]
+       [:div.message-body
+        [:p.mb-4
+         {:dangerouslySetInnerHTML
+          {:__html (:message trigger)}}]
+        [:a.button.is-primary
+         {:on-click #(rf/dispatch [:confirm-trigger])}
+         [:span "I understand, take me there"]
+         [:span.icon
+          [:i.fa.fa-arrow-right]]]]]]]))
 
 (defn search-view []
   [:<>

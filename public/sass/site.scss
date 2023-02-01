@@ -1,4 +1,5 @@
 $magenta: #dc127a !important;
+$black: #272727 !important;
 
 #app {
   height: calc(100vh - 400px);
@@ -36,6 +37,16 @@ $magenta: #dc127a !important;
         opacity: .8;
       }
     }
+  }
+
+  .message {
+    background-color: transparent;
+  }
+  .message-header {
+    background-color: $black;
+  }
+  .message-body {
+    background-color: #ffffff
   }
 
   .magenta-text {

@@ -144,16 +144,6 @@
 ;; -------------------------
 ;; Click through & popups
 
-(rf/reg-sub
-  :trigger/message
-  (fn [db _]
-    (:trigger-message db)))
-
-(rf/reg-event-db
-  :trigger/clear-message
-  (fn [db _]
-    (dissoc db :trigger-message)))
-
 (defn log-click-and-navigate [query trigger]
   (let [payload (->> {:query    query
                       :trigger  trigger}
@@ -165,19 +155,30 @@
       (js/Blob.
         [payload]
         (clj->js {:type "application/json"}))))
-  (rf/dispatch [:trigger/clear-message])
+  (rf/dispatch [:clear-trigger])
   (set! (. js/location -href) (:destination trigger)))
 
-(defn delay-click-through [query trigger]
-  (js/setTimeout
-    #(log-click-and-navigate query trigger)
-    5000))
+(rf/reg-sub
+  :selected-trigger
+  (fn [db _]
+    (:selected-trigger db)))
+
+(rf/reg-event-db
+  :clear-trigger
+  (fn [db _]
+    (dissoc db :selected-trigger)))
+
+(rf/reg-event-fx
+  :confirm-trigger
+  (fn [{:keys [db]} _]
+    (let [query    (str (get-in db [:search :query]))
+          trigger (:selected-trigger db)]
+      {:side-effect #(log-click-and-navigate query trigger)})))
 
 (rf/reg-event-fx
   :select-trigger
   (fn [{:keys [db]} [_ trigger]]
     (let [query    (str (get-in db [:search :query]))]
-      (if-let [message (not-empty (:message trigger))]
-        {:db          (assoc db :trigger-message message)
-         :side-effect #(delay-click-through query trigger)}
+      (if (not-empty (:message trigger))
+        {:db          (assoc db :selected-trigger trigger)}
         {:side-effect #(log-click-and-navigate query trigger)}))))
