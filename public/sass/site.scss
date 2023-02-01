@@ -6,12 +6,18 @@ $black: #272727 !important;
   min-height: 300px;
   max-height: 900px;
 
-  @media (max-width: 768px) {
+  @media screen and (max-width: 768px) {
     height: 100%;
     max-height: 100%;
 
     .trigger-card + .trigger-card {
       border-top: 1px solid #f5f5f5;
+    }
+  }
+
+  @media screen and (min-width: 1320px) {
+    .search-column {
+      padding-right: 3.5rem !important;
     }
   }
 
@@ -86,6 +92,12 @@ $black: #272727 !important;
 
   }
 
+  .audience-heading {
+    border-radius: 5px 5px 0 0;
+    color: #ffffff;
+    background-color: #4a4a4a !important
+  }
+
   .trigger-card {
     p {
       line-height: 1.5em;
@@ -97,6 +109,10 @@ $black: #272727 !important;
       .trigger-description {
         color: initial !important;
       }
+    }
+
+    &:last-child {
+      margin-bottom: 1rem;
     }
   }
 

@@ -34,7 +34,7 @@
   [:div.trigger-card.py-2.is-flex
    {:on-click #(rf/dispatch [:select-trigger trigger])}
    [:p.is-flex-grow-1
-    [:span (:prefix trigger) "..."]
+    [:span (str (:prefix trigger) "...")]
     [:br]
     [:span.trigger-description.magenta-text.has-text-weight-bold
      (sentence-case (:description trigger))]]
@@ -51,13 +51,12 @@
   (when (or (= "All" audience)
             (contains? @(rf/subscribe [:search/audience]) audience))
     (when-let [triggers (not-empty (get triggers audience))]
-      [:<>
+      [:div
        [:div.content.mb-0
-        [:h5.mt-5.mb-2
-         audience
-         (when show-counts?
-           (str " (" (count triggers) " result" (if (> (count triggers) 1) "s") ")"))]
-        [:hr.mt-0.mb-0]]
+        [:h5.audience-heading.py-2.pl-2.mb-0
+         (str
+           audience
+           (when show-counts? (trigger-count triggers)))]]
        [trigger-list triggers]])))
 
 (defn trigger-panel [triggers show-counts?]
@@ -66,7 +65,6 @@
    [trigger-group triggers "Non Patients" show-counts?]
    [trigger-group triggers "Third Parties" show-counts?]
    [trigger-group triggers "All" show-counts?]])
-
 
 ;; ------
 
@@ -95,20 +93,21 @@
      ^{:key label}
      [audience-checkbox label audience])])
 
+
 ;; -------------------------
 ;; Views
 
 (defn unexpected-error []
   [:div.content
    [:p.subtitle "Sorry, an unexpected error occurred."]
-   [:p.mb-1 "Please first"]
+   [:p.mb-2 "Please first"]
    [:a.button.is-primary.is-fullwidth
     {:on-click #(.reload js/location)}
     [:span
      "Reload and Try Again"]
     [:span.icon
      [:i.fa.fa-rotate-right]]]
-   [:p.mb-1.mt-4
+   [:p.mb-2.mt-4
     "If this error continues"]
    [:a.button.is-primary.is-fullwidth.is-outlined
     {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
@@ -119,31 +118,28 @@
 
 (defn no-results []
   [:div.content
-   [:p.subtitle "No Results :("]
+   [:p.title.has-text-weight-normal.mb-5 "No Results :("]
    [:p [:strong "Please try using only keywords,"] " or click the option below that describes you best"]
 
-   [:h5.mt-5.mb-2 "Current Patients"]
-   [:hr.mt-0.mb-0]
+   [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Current Patients"]
    [:p "If you have a " [:strong "medical concern"] ", "
     [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/medical-concern-directions"}])} "click here for guidance"] "."]
    [:p "If you need help with an " [:strong "administrative question"] ", "
     [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/resources"}])} "click here to see our FAQ and Contact Information"] "."]
 
-   [:h5.mt-5.mb-2 "Non Patients"]
-   [:hr.mt-0.mb-0]
+   [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Non Patients"]
    [:p
     [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/patientpreregistration"}])}
      "More information about registration / seeing a physician at Magenta Health is available here"]
-     "."]
+    "."]
 
-   [:h5.mt-5.mb-2 "Third Parties"]
-   [:hr.mt-0.mb-0]
+   [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Third Parties"]
    [:p
     [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/information-for-physicians-and-healthcare-facilities"}])}
      "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]
 
-   [:hr.mb-2]
-   [:p.mb-1 "Lastly, you can skip this tool and"]
+   [:hr.mt-4.mb-3]
+   [:p.mb-2 "Lastly, you can skip this tool and"]
    [:a.button.is-primary.is-fullwidth
     {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
     [:span
@@ -177,7 +173,7 @@
   [:<>
    [popup-message]
    [:div.columns.h-100
-    [:div.column.is-7.m-auto
+    [:div.column.is-7.m-auto.search-column
      [:div.content
       [:p.subtitle "We're testing a new search tool."]
       [:h2.title.is-size-4 "How can we help you today?"]]
@@ -227,8 +223,8 @@
           [trigger-panel results true]
           [:div.content.mb-0
            [:hr.mt-4.mb-3]
-           [:p.mb-2 "If these results aren't helpful, just"]
-           [:a.button.is-primary.is-fullwidth
+           [:p.mb-2 "If these results aren't helpful, try using more general terms, or"]
+           [:a
             {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
             [:span
              "Proceed to our Main Website"]
