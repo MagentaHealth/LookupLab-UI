@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as s]
     [re-frame.core :as rf]
+    [reagent.core :as r]
     [reagent.dom :as d]
     ;;
     [story-discovery-frontend.effects]
@@ -22,13 +23,9 @@
 
 (defn trigger-loader []
   [:<>
-   [:div.block.trigger-loader]
-   [:div.block.trigger-loader-1]
-   [:div.block.trigger-loader]
-   [:div.block.trigger-loader-2]
-   [:div.block.trigger-loader-1]
-   [:div.block.trigger-loader]
-   [:div.block.trigger-loader-2]])
+   (for [[idx ver] (map-indexed vector [0 1 0 2 1 0 2 2 1])]
+     ^{:key (str idx ver)}
+     [:div.block {:class (str "trigger-loader-" ver)}])])
 
 (defn trigger-card [trigger & [{show-icon? :show-icon?}]]
   [:div.trigger-card.py-2.is-flex
@@ -42,10 +39,21 @@
     [:i.fa.fa-chevron-right]]])
 
 (defn trigger-list [triggers]
-  [:<>
-   (for [trigger triggers]
-     ^{:key (str (:audience trigger) (:description trigger))}
-     [trigger-card trigger])])
+  (r/with-let [expanded?   (r/atom false)
+               max-results 5]
+    [:<>
+     (for [trigger (if @expanded? triggers (take max-results triggers))]
+       ^{:key (str (:audience trigger) (:description trigger))}
+       [trigger-card trigger])
+
+     (let [remaining-triggers (- (count triggers) max-results)]
+       (when (and (not @expanded?)
+                  (pos? remaining-triggers))
+         [:div.trigger-card.py-2.is-flex
+          [:a.has-text-weight-normal.has-text-grey-dark
+           {:on-click #(reset! expanded? true)}
+           [:i.fa.fa-plus.magenta-text]
+           (str " show " remaining-triggers " more result" (if (> remaining-triggers 1) "s"))]]))]))
 
 (defn trigger-group [triggers audience show-counts?]
   (when (or (= "All" audience)
@@ -61,10 +69,9 @@
 
 (defn trigger-panel [triggers show-counts?]
   [:<>
-   [trigger-group triggers "Current Patients" show-counts?]
-   [trigger-group triggers "Non Patients" show-counts?]
-   [trigger-group triggers "Third Parties" show-counts?]
-   [trigger-group triggers "All" show-counts?]])
+   (for [audience ["Current Patients" "Non Patients" "Third Parties" "All"]]
+     ^{:key (str audience "-group")}
+     [trigger-group triggers audience show-counts?])])
 
 ;; ------
 

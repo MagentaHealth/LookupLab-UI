@@ -179,10 +179,14 @@ $black: #272727 !important;
     position: relative;
     background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5) 50%, transparent 80%), linear-gradient(#EEEEEEFF 56px, transparent 0), linear-gradient(#EEEEEEFF 24px, transparent 0);
     background-repeat: no-repeat;
-    background-size: 75px 100px, 27% 17px, 88% 17px;
     background-position: 0 0, 0 0, 120px 25px;
     box-sizing: border-box;
     animation: trigger-loader 1s linear infinite;
+
+    &-0 {
+      @extend .trigger-loader;
+      background-size: 75px 100px, 27% 17px, 88% 17px;
+    }
 
     &-1 {
       @extend .trigger-loader;
