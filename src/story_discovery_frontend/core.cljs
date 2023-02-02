@@ -49,7 +49,7 @@
      (let [remaining-triggers (- (count triggers) max-results)]
        (when (and (not @expanded?)
                   (pos? remaining-triggers))
-         [:div.trigger-card.py-2.is-flex
+         [:div.trigger-card.py-2.is-flex.is-justify-content-center
           [:a.has-text-weight-normal.has-text-grey-dark
            {:on-click #(reset! expanded? true)}
            [:i.fa.fa-plus.magenta-text]
@@ -60,8 +60,8 @@
             (contains? @(rf/subscribe [:search/audience]) audience))
     (when-let [triggers (not-empty (get triggers audience))]
       [:div
-       [:div.content.mb-0
-        [:h5.audience-heading.py-2.pl-2.mb-0
+       [:div.content.sticky-audience-heading.mb-0
+        [:h5.audience-heading.py-2.pl-2.mb-2
          (str
            audience
            (when show-counts? (trigger-count triggers)))]]
@@ -211,7 +211,7 @@
         [:i.fa.fa-arrow-right]]]]]
 
 
-    [:div.column.h-100.overflow-scroll
+    [:div.column.results-column.h-100.p-0.pr-3.my-3.ml-3
      (let [results  (not-empty @(rf/subscribe [:search/results]))
            defaults (not-empty @(rf/subscribe [:triggers/default]))]
        (cond
@@ -249,7 +249,7 @@
           [:i.fa.fa-arrow-right]]]]]]])
 
 
-(defn browse-view []
+#_(defn browse-view []
   (when-let [triggers @(rf/subscribe [:triggers/all])]
     [:<>
      [:div.is-flex
@@ -267,13 +267,16 @@
        [trigger-group triggers "Third Parties"]]]]))
 
 (defn page []
-  (condp = @(rf/subscribe [:view])
+  #_(condp = @(rf/subscribe [:view])
     :search (do (rf/dispatch [:http/get-default-triggers])
                 [search-view])
     :browse (do (rf/dispatch [:http/get-all-triggers])
                 [browse-view])
     (do (rf/dispatch [:http/get-default-triggers])
-        [search-view])))
+        [search-view]))
+
+  (rf/dispatch [:http/get-default-triggers])
+  [search-view])
 
 ;; -------------------------
 ;; Initialize app
