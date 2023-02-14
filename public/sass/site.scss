@@ -142,6 +142,20 @@ $black: #272727 !important;
     }
   }
 
+
+  .fade-in {
+    label {
+      transition: opacity 0.5s ease;
+    }
+  }
+
+  .fade-out {
+    label {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+  }
+
   /////////////////////////////////////////////
   // LOADERS
 

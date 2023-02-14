@@ -16,7 +16,17 @@
   :init-db
   (fn [_ _]
     {:db {:view   :search
-          :search {:audience  #{"Current Patients" "Non Patients" "Third Parties"}}}}))
+          :search {:audience        #{"Current Patients" "Non Patients" "Third Parties"}
+                   :prompts         ["I want to ask a question about..."
+                                     "I want to book an appointment for..."
+                                     "I want information about..."
+                                     "I want to request..."]
+                   :placeholders ["the status of my referral"
+                                  "my anxiety"
+                                  "clinic hours"
+                                  "a sick note"]
+                   :selected-prompt (js/Math.floor (* 4(js/Math.random)))
+                   :prompt-class    "fade-in"}}}))
 
 ;; -------------------------
 ;; Views
@@ -145,8 +155,8 @@
 ;; Click through & popups
 
 (defn log-click-and-navigate [query trigger]
-  (let [payload (->> {:query    query
-                      :trigger  trigger}
+  (let [payload (->> {:query   query
+                      :trigger trigger}
                      (clj->js)
                      (.stringify js/JSON))]
     (.sendBeacon
@@ -171,14 +181,44 @@
 (rf/reg-event-fx
   :confirm-trigger
   (fn [{:keys [db]} _]
-    (let [query    (str (get-in db [:search :query]))
+    (let [query   (str (get-in db [:search :query]))
           trigger (:selected-trigger db)]
       {:side-effect #(log-click-and-navigate query trigger)})))
 
 (rf/reg-event-fx
   :select-trigger
   (fn [{:keys [db]} [_ trigger]]
-    (let [query    (str (get-in db [:search :query]))]
+    (let [query (str (get-in db [:search :query]))]
       (if (not-empty (:message trigger))
-        {:db          (assoc db :selected-trigger trigger)}
+        {:db (assoc db :selected-trigger trigger)}
         {:side-effect #(log-click-and-navigate query trigger)}))))
+
+;; -------------------------
+(rf/reg-event-db
+  :search/cycle-prompt
+  (fn [db _]
+    (let [num-prompts    (count (get-in db [:search :prompts]))
+          current-prompt (get-in db [:search :selected-prompt])]
+      (update-in db [:search :selected-prompt] #(mod (inc current-prompt) num-prompts)))))
+
+(rf/reg-sub
+  :search/prompt
+  (fn [db _]
+    (get (get-in db [:search :prompts])
+         (get-in db [:search :selected-prompt]))))
+
+(rf/reg-sub
+  :search/placeholder
+  (fn [db _]
+    (get (get-in db [:search :placeholders])
+         (get-in db [:search :selected-prompt]))))
+
+(rf/reg-event-db
+  :search/set-prompt-class
+  (fn [db [_ class]]
+    (assoc-in db [:search :prompt-class] class)))
+
+(rf/reg-sub
+  :search/prompt-class
+  (fn [db _]
+    (get-in db [:search :prompt-class])))

@@ -186,11 +186,12 @@
       [:h2.title.is-size-4 "How can we help you today?"]]
 
      [:div.field.mb-1
-      [:label.label.mb-1.mt-3 "I want..."]
+      {:class @(rf/subscribe [:search/prompt-class])}
+      [:label.label.mb-1.mt-3 @(rf/subscribe [:search/prompt])]
       [:div.control
        [:input.input
         {:type        "search"
-         :placeholder "to schedule an appointment"
+         :placeholder @(rf/subscribe [:search/placeholder])
          :value       @(rf/subscribe [:search/query])
          :on-change   #(rf/dispatch [:set-query (-> % .-target .-value)])
          :on-key-up   #(if (= 13 (.-which %))
@@ -250,32 +251,41 @@
 
 
 #_(defn browse-view []
-  (when-let [triggers @(rf/subscribe [:triggers/all])]
-    [:<>
-     [:div.is-flex
-      [:button.button
-       {:on-click #(rf/dispatch [:set-view :search])}
-       [:i.fa-solid.fa-x]]
-      [:div.content
-       [:h2.subtitle "How can we help you today?"]]]
-     [:div.columns.h-100.overflow-scroll                    ;; need h-100 - header height
-      [:div.column
-       [trigger-group triggers "Current Patients"]]
-      [:div.column
-       [trigger-group triggers "Non Patients"]]
-      [:div.column
-       [trigger-group triggers "Third Parties"]]]]))
+    (when-let [triggers @(rf/subscribe [:triggers/all])]
+      [:<>
+       [:div.is-flex
+        [:button.button
+         {:on-click #(rf/dispatch [:set-view :search])}
+         [:i.fa-solid.fa-x]]
+        [:div.content
+         [:h2.subtitle "How can we help you today?"]]]
+       [:div.columns.h-100.overflow-scroll                  ;; need h-100 - header height
+        [:div.column
+         [trigger-group triggers "Current Patients"]]
+        [:div.column
+         [trigger-group triggers "Non Patients"]]
+        [:div.column
+         [trigger-group triggers "Third Parties"]]]]))
+
+
+(defn animate-prompt []
+  (rf/dispatch [:search/set-prompt-class "fade-out"])
+  (js/setTimeout
+    #(do (rf/dispatch [:search/set-prompt-class "fade-in"])
+         (js/setTimeout (rf/dispatch [:search/cycle-prompt]) 500))
+    500))
 
 (defn page []
   #_(condp = @(rf/subscribe [:view])
-    :search (do (rf/dispatch [:http/get-default-triggers])
-                [search-view])
-    :browse (do (rf/dispatch [:http/get-all-triggers])
-                [browse-view])
-    (do (rf/dispatch [:http/get-default-triggers])
-        [search-view]))
+      :search (do (rf/dispatch [:http/get-default-triggers])
+                  [search-view])
+      :browse (do (rf/dispatch [:http/get-all-triggers])
+                  [browse-view])
+      (do (rf/dispatch [:http/get-default-triggers])
+          [search-view]))
 
   (rf/dispatch [:http/get-default-triggers])
+  (js/setInterval animate-prompt 7000)
   [search-view])
 
 ;; -------------------------
