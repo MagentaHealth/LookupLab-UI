@@ -1,5 +1,6 @@
 (ns story-discovery-frontend.core
   (:require
+    [cemerick.url :as url]
     [clojure.string :as s]
     [re-frame.core :as rf]
     [reagent.core :as r]
@@ -284,7 +285,9 @@
       (do (rf/dispatch [:http/get-default-triggers])
           [search-view]))
 
-  (rf/dispatch [:http/get-default-triggers])
+  (if-let [query (-> js/window .-location .-href (url/url) :query (get "query"))]
+    (rf/dispatch [:set-query query])
+    (rf/dispatch [:http/get-default-triggers]))
   (js/setInterval animate-prompt 7000)
   [search-view])
 
