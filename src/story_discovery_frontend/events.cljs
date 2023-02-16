@@ -1,6 +1,7 @@
 (ns story-discovery-frontend.events
   (:require
     [ajax.core :as ajax]
+    [cemerick.url :as url]
     [goog.functions]
     [re-frame.core :as rf]))
 
@@ -21,11 +22,11 @@
                                      "I want to book an appointment for..."
                                      "I want information about..."
                                      "I want to request..."]
-                   :placeholders ["the status of my referral"
-                                  "my anxiety"
-                                  "clinic hours"
-                                  "a sick note"]
-                   :selected-prompt (js/Math.floor (* 4(js/Math.random)))
+                   :placeholders    ["the status of my referral"
+                                     "my anxiety"
+                                     "clinic hours"
+                                     "a sick note"]
+                   :selected-prompt (js/Math.floor (* 4 (js/Math.random)))
                    :prompt-class    "fade-in"}}}))
 
 ;; -------------------------
@@ -154,7 +155,7 @@
 ;; -------------------------
 ;; Click through & popups
 
-(defn log-click-and-navigate [query trigger]
+(defn log-click-and-navigate [query trigger & [ignore-params?]]
   (let [payload (->> {:query   query
                       :trigger trigger}
                      (clj->js)
@@ -166,7 +167,13 @@
         [payload]
         (clj->js {:type "application/json"}))))
   (rf/dispatch [:clear-trigger])
-  (set! (. js/location -href) (:destination trigger)))
+  (let [params      (-> js/window .-location .-href (url/url) :query (dissoc "query"))
+        destination (if ignore-params?
+                      (:destination trigger)
+                      (-> (url/url (:destination trigger))
+                          (assoc :query params)
+                          str))]
+    (set! (. js/location -href) destination)))
 
 (rf/reg-sub
   :selected-trigger
@@ -187,11 +194,11 @@
 
 (rf/reg-event-fx
   :select-trigger
-  (fn [{:keys [db]} [_ trigger]]
+  (fn [{:keys [db]} [_ trigger {:keys [ignore-params?]}]]
     (let [query (str (get-in db [:search :query]))]
       (if (not-empty (:message trigger))
         {:db (assoc db :selected-trigger trigger)}
-        {:side-effect #(log-click-and-navigate query trigger)}))))
+        {:side-effect #(log-click-and-navigate query trigger ignore-params?)}))))
 
 ;; -------------------------
 (rf/reg-event-db

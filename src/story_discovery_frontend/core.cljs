@@ -118,7 +118,7 @@
    [:p.mb-2.mt-4
     "If this error continues"]
    [:a.button.is-primary.is-fullwidth.is-outlined
-    {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
+    {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
     [:span
      "Proceed to our Main Website"]
     [:span.icon
@@ -131,25 +131,25 @@
 
    [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Current Patients"]
    [:p "If you have a " [:strong "medical concern"] ", "
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/medical-concern-directions"}])} "click here for guidance"] "."]
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concern-directions"} {:ignore-params? true}])} "click here for guidance"] "."]
    [:p "If you need help with an " [:strong "administrative question"] ", "
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/resources"}])} "click here to see our FAQ and Contact Information"] "."]
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]
 
    [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Non Patients"]
    [:p
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/patientpreregistration"}])}
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/patientpreregistration"} {:ignore-params? true}])}
      "More information about registration / seeing a physician at Magenta Health is available here"]
     "."]
 
    [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Third Parties"]
    [:p
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "/information-for-physicians-and-healthcare-facilities"}])}
+    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/information-for-physicians-and-healthcare-facilities"} {:ignore-params? true}])}
      "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]
 
    [:hr.mt-4.mb-3]
    [:p.mb-2 "Lastly, you can skip this tool and"]
    [:a.button.is-primary.is-fullwidth
-    {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
+    {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
     [:span
      "Proceed to our Main Website"]
     [:span.icon
@@ -165,7 +165,7 @@
        [:div.message-header
         [:p (apply str (s/upper-case (first (:description trigger))) (rest (:description trigger)))]
         [:button.delete
-         {:aria-label "delete"
+         {:aria-label "close"
           :on-click   #(rf/dispatch [:clear-trigger])}]]
        [:div.message-body
         [:p.mb-4
@@ -205,7 +205,7 @@
         ["Third parties" "Third Parties"]]]]
 
      [:a.has-text-grey-light.opt-out-link.is-size-7
-      {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
+      {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
       "Click here if you would prefer to browse the website "
       [:span.icon-text {:style {:vertical-align :initial}}
        "manually"
@@ -234,7 +234,7 @@
            [:hr.mt-4.mb-3]
            [:p.mb-2 "If these results aren't helpful, try using more general terms, or"]
            [:a
-            {:on-click #(rf/dispatch [:select-trigger {:destination "/home"}])}
+            {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
             [:span
              "Proceed to our Main Website"]
             [:span.icon
