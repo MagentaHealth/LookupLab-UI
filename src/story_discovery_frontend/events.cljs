@@ -17,16 +17,12 @@
   :init-db
   (fn [_ _]
     {:db {:view   :search
-          :search {:audience        #{"Current Patients" "Non Patients" "Third Parties"}
-                   :prompts         ["I want to ask a question about..."
-                                     "I want to book an appointment for..."
-                                     "I want information about..."
-                                     "I want to request..."]
-                   :placeholders    ["the status of my referral"
-                                     "my anxiety"
-                                     "clinic hours"
-                                     "a sick note"]
-                   :selected-prompt (js/Math.floor (* 4 (js/Math.random)))
+          :search {:audience        (if js/forPatientsOnly
+                                      #{"Current Patients" "All"}
+                                      #{"Non Patients" "Third Parties" "All"})
+                   :prompts         js/prompts
+                   :placeholders    js/placeholders
+                   :selected-prompt (js/Math.floor (* (count js/prompts) (js/Math.random)))
                    :prompt-class    "fade-in"}}}))
 
 ;; -------------------------
@@ -109,10 +105,11 @@
   :http/search-triggers
   (fn [{:keys [db]} [resource-id]]
     (when-let [query (not-empty (get-in db [:search :query]))]
-      {:http {:method      ajax/GET
+      {:http {:method      ajax/POST
               :url         "/api/search"
               :resource-id resource-id
-              :params      {:query query}
+              :params      {:query query
+                            :audiences (conj (vec (get-in db [:search :audience])) "All")}
               :on-success  [:set-results]}})))
 
 (def debounced-search

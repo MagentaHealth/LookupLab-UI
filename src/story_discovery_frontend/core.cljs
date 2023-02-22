@@ -57,22 +57,27 @@
            (str " show " remaining-triggers " more result" (if (> remaining-triggers 1) "s"))]]))]))
 
 (defn trigger-group [triggers audience show-counts?]
-  (when (or (= "All" audience)
-            (contains? @(rf/subscribe [:search/audience]) audience))
+  (when (contains? @(rf/subscribe [:search/audience]) audience)
     (when-let [triggers (not-empty (get triggers audience))]
       [:div
-       [:div.content.sticky-audience-heading.mb-0
-        [:h5.audience-heading.py-2.pl-2.mb-2
-         (str
-           audience
-           (when show-counts? (trigger-count triggers)))]]
+       (when (or show-counts? (not js/forPatientsOnly))
+         [:div.content.sticky-audience-heading.mb-0
+          [:h5.audience-heading.py-2.pl-2.mb-2
+           (str
+             (when (not js/forPatientsOnly) audience)
+             (when show-counts? (trigger-count triggers)))]])
        [trigger-list triggers]])))
 
 (defn trigger-panel [triggers show-counts?]
-  [:<>
-   (for [audience ["Current Patients" "Non Patients" "Third Parties" "All"]]
-     ^{:key (str audience "-group")}
-     [trigger-group triggers audience show-counts?])])
+  (let [triggers (if js/forPatientsOnly
+                   (-> triggers
+                       (update "Current Patients" #(concat % (get triggers "All")))
+                       (dissoc "All"))
+                   triggers)]
+    [:<>
+     (for [audience ["Current Patients" "Non Patients" "Third Parties" "All"]]
+       ^{:key (str audience "-group")}
+       [trigger-group triggers audience show-counts?])]))
 
 ;; ------
 
@@ -129,22 +134,25 @@
    [:p.title.has-text-weight-normal.mb-5 "No Results :("]
    [:p [:strong "Please try using only keywords,"] " or click the option below that describes you best"]
 
-   [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Current Patients"]
-   [:p "If you have a " [:strong "medical concern"] ", "
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concern-directions"} {:ignore-params? true}])} "click here for guidance"] "."]
-   [:p "If you need help with an " [:strong "administrative question"] ", "
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]
+   (if js/forPatientsOnly
+     [:<>
+      [:hr.mt-4.mb-3]
+      [:p "If you have a " [:strong "medical concern"] ", "
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concern-directions"} {:ignore-params? true}])} "click here for guidance"] "."]
+      [:p "If you need help with an " [:strong "administrative question"] ", "
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]]
 
-   [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Non Patients"]
-   [:p
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/patientpreregistration"} {:ignore-params? true}])}
-     "More information about registration / seeing a physician at Magenta Health is available here"]
-    "."]
+     [:<>
+      [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Non Patients"]
+      [:p
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/patientpreregistration"} {:ignore-params? true}])}
+        "More information about registration / seeing a physician at Magenta Health is available here"]
+       "."]
 
-   [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Third Parties"]
-   [:p
-    [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/information-for-physicians-and-healthcare-facilities"} {:ignore-params? true}])}
-     "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]
+      [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Third Parties"]
+      [:p
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/information-for-physicians-and-healthcare-facilities"} {:ignore-params? true}])}
+        "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]])
 
    [:hr.mt-4.mb-3]
    [:p.mb-2 "Lastly, you can skip this tool and"]
@@ -198,11 +206,11 @@
          :on-key-up   #(if (= 13 (.-which %))
                          (.blur (.-target %)))}]]]
 
-     [:div.field.mb-2
-      [audience-selector
-       [["Current patients" "Current Patients"]
-        ["Non patients" "Non Patients"]
-        ["Third parties" "Third Parties"]]]]
+     (when (not js/forPatientsOnly)
+       [:div.field.mb-2
+        [audience-selector
+         [["Non patients" "Non Patients"]
+          ["Third parties" "Third Parties"]]]])
 
      [:a.has-text-grey-light.opt-out-link.is-size-7
       {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
