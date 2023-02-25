@@ -39,9 +39,9 @@
    [:span.icon.my-auto.is-hidden-tablet.has-text-grey-lighter
     [:i.fa.fa-chevron-right]]])
 
-(defn trigger-list [triggers]
+(defn trigger-list [triggers showing-defaults?]
   (r/with-let [expanded?   (r/atom false)
-               max-results 5]
+               max-results (if showing-defaults? 10000 5)]
     [:<>
      (for [trigger (if @expanded? triggers (take max-results triggers))]
        ^{:key (str (:audience trigger) (:description trigger))}
@@ -56,19 +56,19 @@
            [:i.fa.fa-plus.magenta-text]
            (str " show " remaining-triggers " more result" (if (> remaining-triggers 1) "s"))]]))]))
 
-(defn trigger-group [triggers audience show-counts?]
+(defn trigger-group [triggers audience showing-defaults?]
   (when (contains? @(rf/subscribe [:search/audience]) audience)
     (when-let [triggers (not-empty (get triggers audience))]
       [:div
-       (when (or show-counts? (not js/forPatientsOnly))
+       (when-not (and showing-defaults? js/forPatientsOnly)
          [:div.content.sticky-audience-heading.mb-0
           [:h5.audience-heading.py-2.pl-2.mb-2
            (str
              (when (not js/forPatientsOnly) audience)
-             (when show-counts? (trigger-count triggers)))]])
-       [trigger-list triggers]])))
+             (when-not showing-defaults? (trigger-count triggers)))]])
+       [trigger-list triggers showing-defaults?]])))
 
-(defn trigger-panel [triggers show-counts?]
+(defn trigger-panel [triggers & [{:keys [showing-defaults?]}]]
   (let [triggers (if js/forPatientsOnly
                    (-> triggers
                        (update "Current Patients" #(concat % (get triggers "All")))
@@ -77,7 +77,7 @@
     [:<>
      (for [audience ["Current Patients" "Non Patients" "Third Parties" "All"]]
        ^{:key (str audience "-group")}
-       [trigger-group triggers audience show-counts?])]))
+       [trigger-group triggers audience showing-defaults?])]))
 
 ;; ------
 
@@ -237,7 +237,7 @@
 
          results
          [:<>
-          [trigger-panel results true]
+          [trigger-panel results]
           [:div.content.mb-0
            [:hr.mt-4.mb-3]
            [:p.mb-2 "If these results aren't helpful, try using more general terms, or"]
@@ -249,7 +249,7 @@
              [:i.fa.fa-arrow-right]]]]]
 
          defaults
-         [trigger-panel defaults]))
+         [trigger-panel defaults {:showing-defaults? true}]))
 
      #_[:button.button.is-primary.is-pulled-right
         {:on-click #(rf/dispatch [:set-view :browse])}
