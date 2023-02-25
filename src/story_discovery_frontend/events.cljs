@@ -2,6 +2,7 @@
   (:require
     [ajax.core :as ajax]
     [cemerick.url :as url]
+    [clojure.string :as s]
     [goog.functions]
     [re-frame.core :as rf]))
 
@@ -152,7 +153,7 @@
 ;; -------------------------
 ;; Click through & popups
 
-(defn log-click-and-navigate [query trigger & [ignore-params?]]
+(defn log-click-and-navigate [query {:keys [destination] :as trigger} & [ignore-params?]]
   (let [payload (->> {:query   query
                       :trigger trigger}
                      (clj->js)
@@ -164,10 +165,14 @@
         [payload]
         (clj->js {:type "application/json"}))))
   (rf/dispatch [:clear-trigger])
-  (let [params      (-> js/window .-location .-href (url/url) :query (dissoc "query"))
-        destination (if ignore-params?
-                      (:destination trigger)
-                      (-> (url/url (:destination trigger))
+  (let [params      (-> js/window .-location .-href
+                        (url/url)
+                        :query
+                        (assoc "s" (:story_id trigger))
+                        (dissoc "query"))
+        destination (if (or ignore-params? (not (s/includes? destination js/siteURL)))
+                      destination
+                      (-> (url/url destination)
                           (assoc :query params)
                           str))]
     (set! (. js/location -href) destination)))
