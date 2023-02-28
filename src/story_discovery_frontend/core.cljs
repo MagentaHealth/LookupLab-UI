@@ -181,7 +181,7 @@
           {:__html (:message trigger)}}]
         [:a.button.is-primary
          {:on-click #(rf/dispatch [:confirm-trigger])}
-         [:span "I understand, take me there"]
+         [:span "Continue"]
          [:span.icon
           [:i.fa.fa-arrow-right]]]]]]]))
 
