@@ -132,17 +132,24 @@
 (defn no-results []
   [:div.content
    [:p.title.has-text-weight-normal.mb-5 "No Results :("]
-   [:p [:strong "Please try using only keywords,"] " or click the option below that describes you best"]
 
    (if js/forPatientsOnly
      [:<>
+      [:p [:strong "Please try again using more general keywords"] " - like " [:strong "\"book a well baby\""] " or " [:strong "\"get my medical records\"."]]
+      [:p "How might you answer a receptionist who asks you the question - how can I help you today?"]
       [:hr.mt-4.mb-3]
-      [:p "If you have a " [:strong "medical concern"] ", "
-       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concern-directions"} {:ignore-params? true}])} "click here for guidance"] "."]
+
+      [:p "OR, if this isn't a good time, just skip ahead and " [:strong "go to your physician's old booking page:"]]
+      [:div.buttons.is-centered
+       [:a.button.is-secondary
+        {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concerns-mag88"}])}
+        [:span
+         "Take me to the old booking page"]]]
       [:p "If you need help with an " [:strong "administrative question"] ", "
        [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]]
 
      [:<>
+      [:p [:strong "Please try again using more general keywords,"] " or click the option below that describes you best"]
       [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Non Patients"]
       [:p
        [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/patientpreregistration"} {:ignore-params? true}])}
@@ -152,16 +159,15 @@
       [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Third Parties"]
       [:p
        [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/information-for-physicians-and-healthcare-facilities"} {:ignore-params? true}])}
-        "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]])
-
-   [:hr.mt-4.mb-3]
-   [:p.mb-2 "Lastly, you can skip this tool and"]
-   [:a.button.is-primary.is-fullwidth
-    {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
-    [:span
-     "Proceed to our Main Website"]
-    [:span.icon
-     [:i.fa.fa-arrow-right]]]])
+        "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]
+      [:hr.mt-4.mb-3]
+      [:p.mb-2 "Lastly, you can skip this tool and"]
+      [:a.button.is-primary.is-fullwidth
+       {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
+       [:span
+        "Proceed to our Main Website"]
+       [:span.icon
+        [:i.fa.fa-arrow-right]]]])])
 
 (defn popup-message []
   (if-let [trigger (not-empty @(rf/subscribe [:selected-trigger]))]
@@ -191,12 +197,14 @@
    [:div.columns.h-100
     [:div.column.is-7.m-auto.search-column
      [:div.content
-      [:p.subtitle "We're testing a new search tool."]
+      [:p.subtitle "We're testing a new search tool!"]
       [:h2.title.is-size-4 "How can we help you today?"]]
 
      [:div.field.mb-1
       {:class @(rf/subscribe [:search/prompt-class])}
-      [:label.label.mb-1.mt-3 @(rf/subscribe [:search/prompt])]
+      [:label.label.mb-1.mt-3
+       {:style {:cursor "default"}}
+       @(rf/subscribe [:search/prompt])]
       [:div.control
        [:input.input
         {:type        "search"
@@ -238,43 +246,29 @@
          results
          [:<>
           [trigger-panel results]
-          [:div.content.mb-0
-           [:hr.mt-4.mb-3]
-           [:p.mb-2 "If these results aren't helpful, try using more general terms, or"]
-           [:a
-            {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
-            [:span
-             "Proceed to our Main Website"]
-            [:span.icon
-             [:i.fa.fa-arrow-right]]]]]
+          (if js/forPatientsOnly
+            [:div.content.mb-0
+             [:hr.mt-4.mb-3]
+             [:p.mb-2 "If these results aren't helpful, try using more general terms, or " [:strong "go to your physician's old booking page:"]]
+             [:div.buttons.is-centered
+              [:a.button.is-secondary
+               {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concerns-mag88"}])}
+               [:span
+                "Take me to the old booking page"]]]
+             [:p "If you need help with an " [:strong "administrative question"] ", "
+              [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]]
+            [:div.content.mb-0
+             [:hr.mt-4.mb-3]
+             [:p.mb-2 "If these results aren't helpful, try using more general terms, or"]
+             [:a
+              {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
+              [:span
+               "Proceed to our Main Website"]
+              [:span.icon
+               [:i.fa.fa-arrow-right]]]])]
 
          defaults
-         [trigger-panel defaults {:showing-defaults? true}]))
-
-     #_[:button.button.is-primary.is-pulled-right
-        {:on-click #(rf/dispatch [:set-view :browse])}
-        [:span.icon-text
-         [:span "Browse more"]
-         [:span.icon
-          [:i.fa.fa-arrow-right]]]]]]])
-
-
-#_(defn browse-view []
-    (when-let [triggers @(rf/subscribe [:triggers/all])]
-      [:<>
-       [:div.is-flex
-        [:button.button
-         {:on-click #(rf/dispatch [:set-view :search])}
-         [:i.fa-solid.fa-x]]
-        [:div.content
-         [:h2.subtitle "How can we help you today?"]]]
-       [:div.columns.h-100.overflow-scroll                  ;; need h-100 - header height
-        [:div.column
-         [trigger-group triggers "Current Patients"]]
-        [:div.column
-         [trigger-group triggers "Non Patients"]]
-        [:div.column
-         [trigger-group triggers "Third Parties"]]]]))
+         [trigger-panel defaults {:showing-defaults? true}]))]]])
 
 
 (defn animate-prompt []
@@ -285,14 +279,6 @@
     500))
 
 (defn page []
-  #_(condp = @(rf/subscribe [:view])
-      :search (do (rf/dispatch [:http/get-default-triggers])
-                  [search-view])
-      :browse (do (rf/dispatch [:http/get-all-triggers])
-                  [browse-view])
-      (do (rf/dispatch [:http/get-default-triggers])
-          [search-view]))
-
   (if-let [query (-> js/window .-location .-href (url/url) :query (get "query"))]
     (rf/dispatch [:set-query query])
     (rf/dispatch [:http/get-default-triggers]))
@@ -307,4 +293,4 @@
 
 (defn ^:export init! []
   (rf/dispatch [:init-db])
-  (js/setTimeout mount-root 300))
+  (js/setTimeout mount-root 1000))

@@ -110,7 +110,7 @@
               :url         "/api/search"
               :resource-id resource-id
               :params      {:query query
-                            :audiences (conj (vec (get-in db [:search :audience])) "All")}
+                            :audiences (vec (get-in db [:search :audience]))}
               :on-success  [:set-results]}})))
 
 (def debounced-search
@@ -153,7 +153,8 @@
 ;; -------------------------
 ;; Click through & popups
 
-(defn log-click-and-navigate [query {:keys [destination] :as trigger} & [ignore-params?]]
+(defn log-click-and-navigate
+  [query {destination :destination story-id :story_id :as trigger} & [ignore-params?]]
   (let [payload (->> {:query   query
                       :trigger trigger}
                      (clj->js)
@@ -168,8 +169,8 @@
   (let [params      (-> js/window .-location .-href
                         (url/url)
                         :query
-                        (assoc "s" (:story_id trigger))
-                        (dissoc "query"))
+                        (dissoc "query")
+                        (#(if story-id (assoc % "s" story-id) %)))
         destination (if (or ignore-params? (not (s/includes? destination js/siteURL)))
                       destination
                       (-> (url/url destination)
