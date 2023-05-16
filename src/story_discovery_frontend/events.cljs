@@ -18,9 +18,10 @@
   :init-db
   (fn [_ _]
     {:db {:view   :search
-          :search {:audience        (if js/forPatientsOnly
-                                      #{"Current Patients" "All"}
-                                      #{"Non Patients" "Third Parties" "All"})
+          :search {:audience        (case js/audienceConfig
+                                      "patients" #{"Current Patients" "All"}
+                                      "others" #{"Non Patients" "Third Parties" "All"}
+                                      "all" #{"Current Patients" "Non Patients" "Third Parties" "All"})
                    :prompts         js/prompts
                    :placeholders    js/placeholders
                    :selected-prompt (js/Math.floor (* (count js/prompts) (js/Math.random)))

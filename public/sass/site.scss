@@ -1,5 +1,10 @@
-$magenta: #dc127a !important;
-$black: #272727 !important;
+:root {
+  --primary-text: #dc127a !important;
+  --primary-text-hover: #212121 !important;
+  --primary-button: #dc127a !important;
+  --primary-button-text: white !important;
+  --secondary: #272727 !important;
+}
 
 #app {
   @media screen and (min-width: 769px) {
@@ -34,31 +39,32 @@ $black: #272727 !important;
     &.is-primary {
       &.is-outlined {
         background-color: transparent;
-        color: $magenta;
-        border-color: $magenta;
+        color: var(--primary-button);;
+        border-color: var(--primary-button);;
 
         &:hover {
-          background-color: $magenta;
-          color: white;
+          background-color: var(--primary-button);;
+          color: var(--primary-button-text);
         }
       }
 
       &:not(.is-outlined) {
-        background-color: $magenta;
+        background-color: var(--primary-button);;
+        color: var(--primary-button-text);
 
         &:hover {
-          background-color: $magenta;
+          background-color: var(--primary-button);;
           opacity: .8;
         }
       }
     }
 
     &.is-secondary {
-      background-color: $black;
+      background-color: var(--secondary);;
       color: white;
 
       &:hover {
-        background-color: $black;
+        background-color: var(--secondary);;
         opacity: .8;
       }
     }
@@ -68,14 +74,14 @@ $black: #272727 !important;
     background-color: transparent;
   }
   .message-header {
-    background-color: $black;
+    background-color: var(--secondary);;
   }
   .message-body {
     background-color: #ffffff
   }
 
-  .magenta-text {
-    color: $magenta;
+  .primary-text {
+    color: var(--primary-text);;
   }
 
   .h-100 {
@@ -103,7 +109,7 @@ $black: #272727 !important;
   }
 
   .opt-out-link:hover {
-    color: $magenta;
+    color: var(--primary-text);;
 
   }
 
@@ -153,7 +159,7 @@ $black: #272727 !important;
       cursor: pointer;
 
       .trigger-description {
-        color: initial !important;
+        color: var(--primary-text-hover);
       }
     }
 

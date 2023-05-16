@@ -34,7 +34,7 @@
    [:p.is-flex-grow-1
     [:span (str (:prefix trigger) "...")]
     [:br]
-    [:span.trigger-description.magenta-text.has-text-weight-bold
+    [:span.trigger-description.primary-text.has-text-weight-bold
      (sentence-case (:description trigger))]]
    [:span.icon.my-auto.is-hidden-tablet.has-text-grey-lighter
     [:i.fa.fa-chevron-right]]])
@@ -53,23 +53,23 @@
          [:div.trigger-card.py-2.is-flex.is-justify-content-center
           [:a.has-text-weight-normal.has-text-grey-dark
            {:on-click #(reset! expanded? true)}
-           [:i.fa.fa-plus.magenta-text]
+           [:i.fa.fa-plus.primary-text]
            (str " show " remaining-triggers " more result" (if (> remaining-triggers 1) "s"))]]))]))
 
 (defn trigger-group [triggers audience showing-defaults?]
   (when (contains? @(rf/subscribe [:search/audience]) audience)
     (when-let [triggers (not-empty (get triggers audience))]
       [:div
-       (when-not (and showing-defaults? js/forPatientsOnly)
+       (when-not (and showing-defaults? (= "patients" js/audienceConfig))
          [:div.content.sticky-audience-heading.mb-0
           [:h5.audience-heading.py-2.pl-2.mb-2
            (str
-             (when (not js/forPatientsOnly) audience)
+             (when (not (= "patients" js/audienceConfig)) audience)
              (when-not showing-defaults? (trigger-count triggers)))]])
        [trigger-list triggers showing-defaults?]])))
 
 (defn trigger-panel [triggers & [{:keys [showing-defaults?]}]]
-  (let [triggers (if js/forPatientsOnly
+  (let [triggers (if (= "patients" js/audienceConfig)
                    (-> triggers
                        (update "Current Patients" #(concat % (get triggers "All")))
                        (dissoc "All"))
@@ -123,7 +123,7 @@
    [:p.mb-2.mt-4
     "If this error continues"]
    [:a.button.is-primary.is-fullwidth.is-outlined
-    {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
+    {:on-click #(rf/dispatch [:select-trigger {:destination js/homePage} {:ignore-params? true}])}
     [:span
      "Proceed to our Main Website"]
     [:span.icon
@@ -133,7 +133,7 @@
   [:div.content
    [:p.title.has-text-weight-normal.mb-5 "No Results :("]
 
-   (if js/forPatientsOnly
+   (if (= "patients" js/audienceConfig)
      [:<>
       [:p [:strong "Please try again using more general keywords"] " - like " [:strong "\"book a well baby\""] " or " [:strong "\"get my medical records\"."]]
       [:p "How might you answer a receptionist who asks you the question - how can I help you today?"]
@@ -142,28 +142,34 @@
       [:p "OR, if this isn't a good time, just skip ahead and " [:strong "go to your physician's old booking page:"]]
       [:div.buttons.is-centered
        [:a.button.is-secondary
-        {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concerns-mag88"}])}
+        {:on-click #(rf/dispatch [:select-trigger {:destination js/bookingPage}])}
         [:span
          "Take me to the old booking page"]]]
       [:p "If you need help with an " [:strong "administrative question"] ", "
-       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]]
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination js/resourcesPage} {:ignore-params? true}])} "click here to see our FAQ and Contact Information"] "."]]
 
      [:<>
       [:p [:strong "Please try again using more general keywords,"] " or click the option below that describes you best"]
+      (when (= "all" js/audienceConfig)
+        [:<>
+         [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Current Patients"]
+         [:p "If you need help with an " [:strong "administrative question"] ", "
+          [:a {:on-click #(rf/dispatch [:select-trigger {:destination js/resourcesPage} {:ignore-params? true}])} "click here to see our FAQ and Contact Information"] "."]])
+
       [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Non Patients"]
       [:p
-       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/patientpreregistration"} {:ignore-params? true}])}
-        "More information about registration / seeing a physician at Magenta Health is available here"]
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination js/registrationPage} {:ignore-params? true}])}
+        (str "More information about registration / seeing a physician at " js/orgName " is available here")]
        "."]
 
       [:h5.audience-heading.has-background-grey-dark.py-2.pl-2.mt-5.mb-2 "Third Parties"]
       [:p
-       [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/information-for-physicians-and-healthcare-facilities"} {:ignore-params? true}])}
+       [:a {:on-click #(rf/dispatch [:select-trigger {:destination js/thirdPartyPage} {:ignore-params? true}])}
         "Our contact information for third parties such as pharmacies and insurance companies is available here"] "."]
       [:hr.mt-4.mb-3]
       [:p.mb-2 "Lastly, you can skip this tool and"]
       [:a.button.is-primary.is-fullwidth
-       {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
+       {:on-click #(rf/dispatch [:select-trigger {:destination js/homePage} {:ignore-params? true}])}
        [:span
         "Proceed to our Main Website"]
        [:span.icon
@@ -214,14 +220,24 @@
          :on-key-up   #(if (= 13 (.-which %))
                          (.blur (.-target %)))}]]]
 
-     (when (not js/forPatientsOnly)
+     (case js/audienceConfig
+       "others"
        [:div.field.mb-2
         [audience-selector
          [["Non patients" "Non Patients"]
-          ["Third parties" "Third Parties"]]]])
+          ["Third parties" "Third Parties"]]]]
+
+       "all"
+       [:div.field.mb-2
+        [audience-selector
+         [["Current patients" "Current Patients"]
+          ["Non patients" "Non Patients"]
+          ["Third parties" "Third Parties"]]]]
+
+       nil)
 
      [:a.has-text-grey-light.opt-out-link.is-size-7
-      {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
+      {:on-click #(rf/dispatch [:select-trigger {:destination js/homePage} {:ignore-params? true}])}
       "Click here if you would prefer to browse the website "
       [:span.icon-text {:style {:vertical-align :initial}}
        "manually"
@@ -246,22 +262,22 @@
          results
          [:<>
           [trigger-panel results]
-          (if js/forPatientsOnly
+          (if (= "patients" js/audienceConfig)
             [:div.content.mb-0
              [:hr.mt-4.mb-3]
              [:p.mb-2 "If these results aren't helpful, try using more general terms, or " [:strong "go to your physician's old booking page:"]]
              [:div.buttons.is-centered
               [:a.button.is-secondary
-               {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/medical-concerns-mag88"}])}
+               {:on-click #(rf/dispatch [:select-trigger {:destination js/bookingPage}])}
                [:span
                 "Take me to the old booking page"]]]
              [:p "If you need help with an " [:strong "administrative question"] ", "
-              [:a {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/resources"}])} "click here to see our FAQ and Contact Information"] "."]]
+              [:a {:on-click #(rf/dispatch [:select-trigger {:destination js/resourcesPage}])} "click here to see our FAQ and Contact Information"] "."]]
             [:div.content.mb-0
              [:hr.mt-4.mb-3]
              [:p.mb-2 "If these results aren't helpful, try using more general terms, or"]
              [:a
-              {:on-click #(rf/dispatch [:select-trigger {:destination "https://www.magentahealth.ca/home"} {:ignore-params? true}])}
+              {:on-click #(rf/dispatch [:select-trigger {:destination js/homePage} {:ignore-params? true}])}
               [:span
                "Proceed to our Main Website"]
               [:span.icon
