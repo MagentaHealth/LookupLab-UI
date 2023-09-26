@@ -3,8 +3,9 @@
 
 LookupLab-UI is the frontend complement to [LookupLab](https://github.com/MagentaHealth/LookupLab/tree/master).
 
-This tool has been tailored to Magenta Health's needs, but some basic configuration options have been provided for organizations that wish to leverage what we have built.
+This tool has been tailored to Magenta Health's needs, but some basic configuration options have been provided for organizations that wish to leverage what we have built. Further customizations may require more extensive code changes.
 
+![app-screenshot](https://raw.githubusercontent.com/MagentaHealth/LookupLab-UI/54edf0211252d5b5de2cb7be4214d9066e4bbc5d/LookupLab-UI.png?token=GHSAT0AAAAAACA7XI744MSDUN2ACPYYPI3EZITB6EQ)
 
 ## Requirements
 
@@ -32,7 +33,7 @@ npx shadow-cljs browser-repl
 
 ### Configuration
 
-`public/index.html`(/public/index.html) contains some basic configuration options.
+[`public/index.html`](public/index.html) contains some basic configuration options.
 
 - `apiURL` - the base URL of your [LookupLab](https://github.com/MagentaHealth/LookupLab/tree/master) deployment
 - `siteURL` - your website's URL
@@ -56,7 +57,7 @@ npx sass public/sass/site.scss:public/css/site.css
 
 This will create two files - `public/js/app.js` and `public/css/site.css`.
 
-The app can be published anywhere - as its own standalone page or within another existing page - so long as the necessary resources, configuration, and HTML elements are included. See `public/index.html`(/public/index.html) for an example setup.
+The app can be published anywhere - as its own standalone page or within another existing page - so long as the necessary resources, configuration, and HTML elements are included. See [`public/index.html`](public/index.html) for an example setup.
 
 
 #### Resources
