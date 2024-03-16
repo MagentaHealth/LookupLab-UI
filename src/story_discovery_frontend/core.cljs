@@ -221,8 +221,8 @@
    [:div.columns.h-100
     [:div.column.is-7.m-auto.search-column
      [:div.content
-      [:p.subtitle "We're testing a new search tool!"]
-      [:h2.title.is-size-4 "How can we help you today?"]]
+      [:h2.title.is-size-4 "How can we help you today?"]
+      [:p.subtitle "Enter your search term below"]]
 
      [:div.field.mb-1
       {:class @(rf/subscribe [:search/prompt-class])}
@@ -232,6 +232,7 @@
       [:div.control
        [:input.input
         {:type        "search"
+         :maxlength   60
          :placeholder @(rf/subscribe [:search/placeholder])
          :value       @(rf/subscribe [:search/query])
          :on-change   #(rf/dispatch [:set-query (-> % .-target .-value)])
