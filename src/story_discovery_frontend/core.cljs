@@ -78,12 +78,16 @@
   (when (contains? @(rf/subscribe [:search/audience]) audience)
     (when-let [triggers (not-empty (get triggers audience))]
       [:div
-       (when-not (and showing-defaults? (= "patients" js/audienceConfig))
+       (if (and showing-defaults? (= "patients" js/audienceConfig))
+         [:div.content.sticky-audience-heading.mb-0
+          [:h5.audience-heading.py-2.pl-2.mb-2
+           "Common Search Results"]]
          [:div.content.sticky-audience-heading.mb-0
           [:h5.audience-heading.py-2.pl-2.mb-2
            (str
              (when (not (= "patients" js/audienceConfig)) audience)
              (when-not showing-defaults? (trigger-count triggers)))]])
+
        [trigger-list triggers showing-defaults?]])))
 
 (defn trigger-panel [triggers & [{:keys [showing-defaults?]}]]
@@ -222,7 +226,7 @@
     [:div.column.is-7.m-auto.search-column
      [:div.content
       [:h2.title.is-size-4 "How can we help you today?"]
-      [:p.subtitle "Enter your search term below"]]
+      [:p.subtitle.primary-text "Enter your search term below"]]
 
      [:div.field.mb-1
       {:class @(rf/subscribe [:search/prompt-class])}
@@ -255,13 +259,8 @@
 
        nil)
 
-     [:a.has-text-grey-light.opt-out-link.is-size-7
-      {:on-click #(rf/dispatch [:select-trigger {:destination js/homePage} {:ignore-params? true}])}
-      "Click here if you would prefer to browse the website "
-      [:span.icon-text {:style {:vertical-align :initial}}
-       "manually"
-       [:span.icon
-        [:i.fa.fa-arrow-right]]]]]
+     [:label.label.has-text-grey-light.is-size-7
+      "We recommend short but specific queries (i.e. medical records, well baby)"]]
 
 
     [:div.column.results-column.h-100.p-0.pr-3.my-3.ml-3
